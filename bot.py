@@ -2,8 +2,6 @@
 Aria Telegram Bot - 主程式
 一個具有 AI 對話、筆記、天氣查詢等功能的 Telegram 機器人
 """
-from email.mime import application
-from handlers.notes import graph_command, search_command
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from config.settings import settings
@@ -22,11 +20,16 @@ from handlers import (
     note_command,
     notes_command,
     delnote_command,
+    graph_command,
+    search_command,
     weather_command,
     currency_command,
-    dice_command,
-    flip_command,
-    handle_message
+    handle_message,
+    # 新增
+    daily_command,
+    news_command,
+    paper_command,
+    learn_command,
 )
 
 logger = setup_logger(__name__)
@@ -44,7 +47,7 @@ def main():
     if db_manager.initialize():
         logger.info("✅ 資料庫已初始化")
     else:
-        logger.warning("⚠️ 資料庫未初始化，持久化功能將無法使用")
+        logger.warning("⚠️ 資料庫未初始化,持久化功能將無法使用")
     
     # 檢查 Claude API
     if claude_service.is_available:
@@ -69,16 +72,18 @@ def main():
     application.add_handler(CommandHandler("note", note_command))
     application.add_handler(CommandHandler("notes", notes_command))
     application.add_handler(CommandHandler("delnote", delnote_command))
-    application.add_handler(CommandHandler("graph", graph_command))      # 新增
-    application.add_handler(CommandHandler("search", search_command)) 
+    application.add_handler(CommandHandler("graph", graph_command))
+    application.add_handler(CommandHandler("search", search_command))
     
     # 註冊工具命令
     application.add_handler(CommandHandler("weather", weather_command))
     application.add_handler(CommandHandler("currency", currency_command))
     
-    # 註冊娛樂命令
-    application.add_handler(CommandHandler("dice", dice_command))
-    application.add_handler(CommandHandler("flip", flip_command))
+    # 註冊每日摘要相關命令
+    application.add_handler(CommandHandler("daily", daily_command))
+    application.add_handler(CommandHandler("news", news_command))
+    application.add_handler(CommandHandler("paper", paper_command))
+    application.add_handler(CommandHandler("learn", learn_command))
     
     # 註冊一般訊息處理器
     application.add_handler(
@@ -87,7 +92,7 @@ def main():
     
     # 啟動 bot
     logger.info("🚀 Aria Bot 啟動中...")
-    logger.info("✨ 功能：Claude AI(記憶)、筆記、天氣、匯率、統計")
+    logger.info("✨ 功能：Claude AI、筆記、天氣、匯率、論文搜尋、主題研究、每日摘要")
     
     application.run_polling(allowed_updates=['message'])
 

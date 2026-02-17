@@ -14,7 +14,7 @@ class ResearchService:
     @staticmethod
     def search_web_articles(query: str, max_results: int = 3) -> List[Dict]:
         """
-        搜尋網路文章 (使用 DuckDuckGo 或其他免費 API)
+        搜尋網路文章 (使用 DuckDuckGo)
         
         Args:
             query: 搜尋關鍵字
@@ -58,6 +58,7 @@ class ResearchService:
                             'source': 'DuckDuckGo'
                         })
                 
+                logger.info(f"✅ Found {len(articles)} web articles")
                 return articles
             
             return []
@@ -95,6 +96,7 @@ class ResearchService:
                 
                 if data['items']:
                     repo = data['items'][0]
+                    logger.info(f"✅ Found GitHub repo: {repo['full_name']}")
                     return {
                         'name': repo['full_name'],
                         'description': repo.get('description', 'No description'),
@@ -140,7 +142,6 @@ class ResearchService:
         )
         if papers:
             research_data['papers'] = papers
-            logger.info(f"Found {len(papers)} papers")
         
         # 2. 搜尋網路文章
         articles = ResearchService.search_web_articles(
@@ -149,14 +150,13 @@ class ResearchService:
         )
         if articles:
             research_data['web_articles'] = articles
-            logger.info(f"Found {len(articles)} articles")
         
         # 3. 搜尋 GitHub
         github_repo = ResearchService.search_github(topic)
         if github_repo:
             research_data['github'] = github_repo
-            logger.info(f"Found GitHub: {github_repo['name']}")
         
+        logger.info(f"✅ Research complete: {len(research_data['papers'])} papers, {len(research_data['web_articles'])} articles")
         return research_data
 
 research_service = ResearchService()

@@ -63,7 +63,8 @@ class NewsService:
                     logger.error(f"RSS parse error {feed_url}: {e}")
                     continue
             
-            return news_list[:max_items]
+            logger.info(f"✅ Fetched {len(news_list)} news items")
+            return news_list[:max_items] if news_list else None
         
         except Exception as e:
             logger.error(f"News fetch error: {e}")

@@ -247,25 +247,32 @@ async def handle_tool_calls(update: Update, tool_calls: List[Dict], telegram_id:
             category = tool_input.get("category", "all")
             max_items = tool_input.get("max_items", 5)
             
-            await update.message.reply_text(f'📰 正在取得{category}新聞...')
+            await update.message.reply_text(f'📰 正在取得新聞...')
             
             news_list = news_service.fetch_news(category, max_items)
             
             if news_list:
                 news_text = '📰 *今日新聞*\n\n'
                 for i, news in enumerate(news_list, 1):
-                    news_text += f'{i}. **{news["title"]}**\n'
-                    news_text += f'   📅 {news.get("published", "Unknown")}\n'
+                    news_text += f'*{i}. {news["title"]}*\n'
+                    if news.get('published'):
+                        news_text += f'📅 {news.get("published", "")[:16]} | 📰 {news.get("source", "")}\n'
                     if news.get('summary'):
-                        news_text += f'   {news["summary"]}\n'
-                    news_text += f'   🔗 {news["link"]}\n\n'
+                        news_text += f'{news["summary"]}\n'
+                    if news.get('link'):
+                        news_text += f'🔗 [閱讀全文]({news["link"]})\n'
+                    news_text += '\n'
                 
-                await update.message.reply_text(news_text, parse_mode='Markdown')
+                await update.message.reply_text(
+                    news_text, 
+                    parse_mode='Markdown',
+                    disable_web_page_preview=True
+                )
                 results.append(f"成功取得 {len(news_list)} 則新聞")
             else:
                 await update.message.reply_text('❌ 新聞取得失敗')
                 results.append("新聞取得失敗")
-        
+
         # AI 論文搜尋
         elif tool_name == "search_arxiv_papers":
             from services.arxiv_service import arxiv_service
@@ -340,7 +347,7 @@ async def handle_tool_calls(update: Update, tool_calls: List[Dict], telegram_id:
                 else:
                     await update.message.reply_text('❌ 論文取得失敗,請稍後再試')
                 results.append("未找到論文")
-        
+
         # 語言學習
         elif tool_name == "generate_language_lesson":
             language = tool_input.get("language", "english")
@@ -364,7 +371,7 @@ async def handle_tool_calls(update: Update, tool_calls: List[Dict], telegram_id:
             focus = tool_input.get("focus", "overview")
             depth = tool_input.get("depth", "detailed")
             
-            await update.message.reply_text(f'🔍 正在深度研究「{topic}」...')
+            await update.message.reply_text(f'🔍 正在深度研究「{topic}」...\n\n這需要幾秒鐘...')
             
             # 收集資訊
             research_data = research_service.research_topic(topic, focus, depth)
@@ -384,7 +391,7 @@ async def handle_tool_calls(update: Update, tool_calls: List[Dict], telegram_id:
                 data_summary += f'🌐 找到 {len(research_data["web_articles"])} 個網路資源:\n'
                 for a in research_data['web_articles']:
                     if a.get('snippet'):
-                        data_summary += f'- {a.get("title", "")}\n'
+                        data_summary += f'- {a.get("title", "")[:80]}\n'
                         data_summary += f'  {a["snippet"][:100]}...\n\n'
             
             # GitHub
@@ -409,7 +416,6 @@ async def handle_tool_calls(update: Update, tool_calls: List[Dict], telegram_id:
 3. 💡 主要應用場景
 4. ✅ 優勢
 5. ⚠️ 限制或注意事項
-6. 🔗 相關資源
 
 請用繁體中文,以清晰易懂的方式說明。
 """
@@ -433,6 +439,13 @@ async def handle_tool_calls(update: Update, tool_calls: List[Dict], telegram_id:
                 if research_data['github']:
                     links_text += f'💻 *GitHub*: [{research_data["github"]["name"]}]({research_data["github"]["url"]})\n\n'
                 
+                if research_data['web_articles']:
+                    links_text += '🌐 *網路資源*\n'
+                    for i, a in enumerate(research_data['web_articles'], 1):
+                        if a.get('url'):
+                            links_text += f'{i}. [{a.get("title", "資源")[:50]}]({a["url"]})\n'
+                    links_text += '\n'
+                
                 links_text += '━━━━━━━━━━━━━━━━━\n\n'
                 
                 await update.message.reply_text(
@@ -448,7 +461,7 @@ async def handle_tool_calls(update: Update, tool_calls: List[Dict], telegram_id:
             else:
                 await update.message.reply_text('❌ 分析失敗')
                 results.append("分析失敗")
-
+    
     return results
 
 

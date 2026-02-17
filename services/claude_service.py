@@ -1,5 +1,5 @@
 """
-Claude AI 服務（支援 Tool Use）
+Claude AI 服務(支援 Tool Use)
 """
 from typing import List, Dict, Optional, Any
 from anthropic import Anthropic
@@ -26,15 +26,16 @@ class ClaudeService:
     
     # 定義可用的工具
     TOOLS = [
+        # 原有的 3 個工具
         {
             "name": "get_weather",
-            "description": "查詢指定城市的當前天氣資訊，包括溫度、濕度、天氣狀況、風速等。支援中英文城市名稱。",
+            "description": "查詢指定城市的當前天氣資訊,包括溫度、濕度、天氣狀況、風速等。支援中英文城市名稱。",
             "input_schema": {
                 "type": "object",
                 "properties": {
                     "city": {
                         "type": "string",
-                        "description": "城市名稱，例如：台北、台中、Taipei、Tokyo、New York"
+                        "description": "城市名稱,例如:台北、台中、Taipei、Tokyo、New York"
                     }
                 },
                 "required": ["city"]
@@ -42,7 +43,7 @@ class ClaudeService:
         },
         {
             "name": "convert_currency",
-            "description": "轉換貨幣匯率，支援主要貨幣之間的即時匯率轉換",
+            "description": "轉換貨幣匯率,支援主要貨幣之間的即時匯率轉換",
             "input_schema": {
                 "type": "object",
                 "properties": {
@@ -52,7 +53,7 @@ class ClaudeService:
                     },
                     "from_currency": {
                         "type": "string",
-                        "description": "來源貨幣代碼（大寫），例如：USD（美金）、TWD（台幣）、EUR（歐元）、GBP（英鎊）、JPY（日圓）、CNY（人民幣）、KRW（韓元）"
+                        "description": "來源貨幣代碼(大寫),例如:USD(美金)、TWD(台幣)、EUR(歐元)、GBP(英鎊)、JPY(日圓)、CNY(人民幣)、KRW(韓元)"
                     }
                 },
                 "required": ["amount", "from_currency"]
@@ -60,44 +61,26 @@ class ClaudeService:
         },
         {
             "name": "save_note",
-            "description": "儲存用戶的筆記、待辦事項或重要資訊到資料庫。支援使用 #標籤 來分類，以及 [[筆記標題]] 來連結其他筆記",
+            "description": "儲存用戶的筆記、待辦事項或重要資訊到資料庫。支援使用 #標籤 來分類,以及 [[筆記標題]] 來連結其他筆記",
             "input_schema": {
                 "type": "object",
                 "properties": {
                     "title": {
                         "type": "string",
-                        "description": "筆記標題，簡短描述筆記內容"
+                        "description": "筆記標題,簡短描述筆記內容"
                     },
                     "content": {
                         "type": "string",
-                        "description": "筆記的詳細內容。可以包含 #標籤 來分類（例如：#工作 #重要），也可以用 [[其他筆記標題]] 來建立連結"
+                        "description": "筆記的詳細內容。可以包含 #標籤 來分類(例如:#工作 #重要),也可以用 [[其他筆記標題]] 來建立連結"
                     }
                 },
                 "required": ["title", "content"]
             }
         },
-        {
-            "name": "fetch_daily_news",
-            "description": "取得今日國際新聞摘要。從 BBC、Reuters 等可靠來源抓取最新新聞,包含科技、國際、商業等類別",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "category": {
-                        "type": "string",
-                        "enum": ["all", "technology", "world", "business", "science"],
-                        "description": "新聞類別",
-                        "default": "all"
-                    },
-                    "max_items": {
-                        "type": "integer",
-                        "description": "最多幾則新聞 (1-10)",
-                        "minimum": 1,
-                        "maximum": 10,
-                        "default": 5
-                    }
-                }
-            }
-        },
+        
+        # ===== 新增的 3 個工具 =====
+        
+        # 新工具 1: 論文搜尋
         {
             "name": "search_arxiv_papers",
             "description": """
@@ -144,52 +127,52 @@ class ClaudeService:
                 }
             }
         },
+        
+        # 新工具 2: 新聞查詢
         {
-            "name": "generate_language_lesson",
-            "description": "生成每日語言學習內容,包含實用句子、單字、文法解釋、例句等",
+            "name": "fetch_daily_news",
+            "description": """
+            取得今日國際新聞摘要。
+            從 BBC、Reuters 等可靠來源抓取最新新聞,包含科技、國際、商業、科學等類別。
+            返回新聞標題、摘要、來源、連結。
+            """,
             "input_schema": {
                 "type": "object",
                 "properties": {
-                    "language": {
+                    "category": {
                         "type": "string",
-                        "enum": ["english", "japanese", "korean"],
-                        "description": "學習語言",
-                        "default": "english"
+                        "enum": ["all", "technology", "world", "business", "science"],
+                        "description": "新聞類別: all(所有), technology(科技), world(國際), business(商業), science(科學)",
+                        "default": "all"
                     },
-                    "level": {
-                        "type": "string",
-                        "enum": ["beginner", "intermediate", "advanced"],
-                        "description": "難度級別",
-                        "default": "intermediate"
-                    },
-                    "topic": {
-                        "type": "string",
-                        "enum": ["daily_life", "business", "travel", "technology", "random"],
-                        "description": "主題",
-                        "default": "random"
+                    "max_items": {
+                        "type": "integer",
+                        "description": "最多幾則新聞 (1-10)",
+                        "minimum": 1,
+                        "maximum": 10,
+                        "default": 5
                     }
                 }
             }
         },
+        
+        # 新工具 3: 主題研究
         {
             "name": "research_topic",
             "description": """
-            深度研究某個主題,從多個來源收集資訊並生成綜合報告。
+            深度研究某個主題,從多個來源收集資訊並準備綜合報告。
             
             會搜尋:
             1. arXiv 學術論文
             2. 網路文章和文件
             3. GitHub 專案 (如果相關)
-            4. 技術部落格
             
-            然後綜合分析,生成包含以下內容的報告:
-            - 主題概述
-            - 核心概念
-            - 主要技術/方法
-            - 應用場景
-            - 相關資源連結
+            適合用於:快速了解新技術、工具、研究領域。
             
-            適合用於:快速了解新技術、工具、研究領域
+            ⚠️ 重要:這個工具會返回原始資料,你必須在後續回應中:
+            1. 分析所有收集到的資訊
+            2. 生成一份完整的繁體中文綜合報告
+            3. 包含:概述、核心功能、應用場景、優缺點、相關資源
             """,
             "input_schema": {
                 "type": "object",
@@ -226,7 +209,7 @@ class ClaudeService:
              system_prompt: Optional[str] = None,
              use_tools: bool = True) -> Dict[str, Any]:
         """
-        與 Claude 對話（支援工具調用）
+        與 Claude 對話(支援工具調用)
         
         Args:
             messages: 訊息列表
@@ -248,7 +231,7 @@ class ClaudeService:
                 "messages": messages
             }
             
-            # 如果啟用工具，添加 tools 參數
+            # 如果啟用工具,添加 tools 參數
             if use_tools:
                 kwargs["tools"] = self.TOOLS
             
